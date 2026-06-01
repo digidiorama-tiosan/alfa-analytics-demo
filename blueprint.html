@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alfa Analytics — Production Blueprint</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+  *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+  :root{
+    --bg:#0d1117; --surface:#161b22; --surface2:#1c2330; --border:#21262d; --border2:#30363d;
+    --text:#e6edf3; --text2:#8b949e; --text3:#5a6373;
+    --accent:#58a6ff; --accent2:#1f6feb; --green:#3fb950; --amber:#d29922; --red:#f85149; --purple:#a371f7; --cyan:#39d3d8;
+    --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace; --radius:14px;
+  }
+  body{ font-family:var(--font); background:
+      radial-gradient(900px 500px at 12% -5%, rgba(31,111,235,0.12), transparent 60%),
+      radial-gradient(800px 500px at 100% 0%, rgba(163,113,247,0.10), transparent 55%),
+      var(--bg); color:var(--text); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:1060px; margin:0 auto; padding:52px 28px 80px; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:9px; font-size:11.5px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--accent); margin-bottom:18px; }
+  .eyebrow::before{ content:''; width:26px; height:2px; background:var(--accent); border-radius:2px; }
+  h1{ font-size:38px; font-weight:800; letter-spacing:-1px; line-height:1.08; margin-bottom:14px; text-wrap:balance; }
+  h1 em{ font-style:normal; background:linear-gradient(120deg,var(--accent),var(--purple)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .lead{ font-size:15.5px; color:var(--text2); max-width:680px; }
+  .mark{ display:flex; align-items:center; gap:13px; margin-bottom:30px; }
+  .mark .logo{ width:46px;height:46px;border-radius:13px; display:grid;place-items:center; font-weight:800; font-size:21px; color:#fff; background:linear-gradient(135deg,#1f6feb,#a371f7); box-shadow:0 8px 24px rgba(31,111,235,0.45); letter-spacing:-1px; }
+  .mark .nm{ font-size:15px; font-weight:700; } .mark .sb{ font-size:11.5px; color:var(--text3); text-transform:uppercase; letter-spacing:.6px; }
+  section{ margin-top:54px; }
+  .sec-title{ font-size:12px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--text3); margin-bottom:20px; display:flex; align-items:center; gap:12px; }
+  .sec-title::after{ content:''; flex:1; height:1px; background:var(--border); }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; position:relative; overflow:hidden; }
+  .card.hl::before{ content:''; position:absolute; top:0;left:0;right:0;height:3px; background:linear-gradient(90deg,var(--red),var(--amber)); }
+  .card.ok::before{ content:''; position:absolute; top:0;left:0;right:0;height:3px; background:linear-gradient(90deg,var(--green),#2ea043); }
+  .tag{ display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:4px 10px; border-radius:20px; margin-bottom:13px; }
+  .tag.high{ background:rgba(248,81,73,0.13); color:var(--red); } .tag.fix{ background:rgba(63,185,80,0.13); color:var(--green); }
+  .card h3{ font-size:17px; font-weight:700; letter-spacing:-.3px; margin-bottom:8px; }
+  .card p{ font-size:13.5px; color:var(--text2); }
+  .card .arrow{ font-family:var(--mono); color:var(--accent); font-weight:600; }
+
+  /* architecture diagram */
+  .arch{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:30px; }
+  .layer{ display:flex; align-items:center; gap:14px; }
+  .node{ flex:1; background:var(--surface2); border:1px solid var(--border2); border-radius:12px; padding:16px 18px; }
+  .node .t{ font-size:13.5px; font-weight:700; } .node .d{ font-size:11.5px; color:var(--text3); margin-top:3px; }
+  .node.api{ border-color:rgba(88,166,255,0.4); background:rgba(88,166,255,0.06); }
+  .node.db{ border-color:rgba(163,113,247,0.4); background:rgba(163,113,247,0.06); }
+  .flowdown{ text-align:center; color:var(--accent); font-size:20px; margin:8px 0; }
+  .pill{ display:inline-block; font-family:var(--mono); font-size:11px; color:var(--cyan); background:rgba(57,211,216,0.08); border:1px solid rgba(57,211,216,0.25); padding:3px 9px; border-radius:7px; }
+
+  /* phases */
+  .phase{ display:flex; gap:18px; padding:20px 0; border-bottom:1px solid var(--border); }
+  .phase:last-child{ border-bottom:none; }
+  .phase .num{ width:44px;height:44px;flex-shrink:0; border-radius:12px; display:grid;place-items:center; font-family:var(--mono); font-weight:600; font-size:15px; color:#fff; background:linear-gradient(135deg,#1f6feb,#3b82f6); }
+  .phase.p2 .num{ background:linear-gradient(135deg,#a371f7,#7c3aed); }
+  .phase.p3 .num{ background:linear-gradient(135deg,#39d3d8,#0e9b8f); }
+  .phase.p0 .num{ background:var(--surface2); border:1px solid var(--border2); color:var(--text2); }
+  .phase .body h4{ font-size:15.5px; font-weight:700; margin-bottom:4px; }
+  .phase .body .when{ font-size:11.5px; color:var(--text3); font-family:var(--mono); }
+  .phase .body p{ font-size:13px; color:var(--text2); margin-top:7px; }
+  .phase .body .solves{ display:inline-block; margin-top:8px; font-size:11px; font-weight:700; color:var(--green); }
+
+  ul.clean{ list-style:none; display:flex; flex-direction:column; gap:11px; }
+  ul.clean li{ display:flex; gap:11px; font-size:13.5px; color:var(--text2); }
+  ul.clean li b{ color:var(--text); font-weight:600; }
+  ul.clean li::before{ content:''; width:7px;height:7px;border-radius:2px; background:var(--accent); margin-top:7px; flex-shrink:0; }
+
+  .files{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .file{ display:flex; align-items:center; gap:11px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .file .ic{ width:30px;height:30px;border-radius:8px; display:grid;place-items:center; background:var(--surface2); color:var(--accent); flex-shrink:0; }
+  .file .fn{ font-family:var(--mono); font-size:12px; color:var(--text); } .file .fd{ font-size:11px; color:var(--text3); }
+
+  .foot{ margin-top:56px; padding-top:22px; border-top:1px solid var(--border); font-size:11.5px; color:var(--text3); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  @media (max-width:760px){ .grid2,.files{ grid-template-columns:1fr; } h1{ font-size:30px; } .layer{ flex-direction:column; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mark">
+    <div class="logo">A</div>
+    <div><div class="nm">Alfa Analytics</div><div class="sb">Commercial Intelligence Platform</div></div>
+  </div>
+
+  <div class="eyebrow">Production Blueprint · Engineering Handoff</div>
+  <h1>From a clickable prototype to a <em>governed, multi-user product</em>.</h1>
+  <p class="lead">The interface and behavior are already built and validated. This blueprint specifies the
+  backend that makes it real — shared across users and devices, secure, and able to scale past the browser.</p>
+
+  <!-- PROBLEMS → FIXES -->
+  <section>
+    <div class="sec-title">The two HIGH-priority constraints — and how we close them</div>
+    <div class="grid2">
+      <div class="card hl">
+        <span class="tag high">HIGH · Governance</span>
+        <h3>Single-user, no governance</h3>
+        <p>No auth, RBAC or audit. <span class="arrow">→</span> Real sign-in, self-service registration with
+        admin approval, role-based permissions enforced on the server, and an immutable audit trail.</p>
+      </div>
+      <div class="card hl">
+        <span class="tag high">HIGH · Scale</span>
+        <h3>Browser memory ceiling</h3>
+        <p>All rows live in the browser. <span class="arrow">→</span> Data moves server-side; aggregations run
+        in SQL/warehouse and the browser receives KB of rolled-up JSON — admin uploads once, everyone sees it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section>
+    <div class="sec-title">Target architecture</div>
+    <div class="arch">
+      <div class="layer">
+        <div class="node"><div class="t">Client (SPA)</div><div class="d">Existing Alfa UI · renders only · holds JWT + theme</div></div>
+      </div>
+      <div class="flowdown">↓ &nbsp;<span class="pill">HTTPS · JSON</span> &nbsp; <span class="pill">SSE / WebSocket</span>&nbsp; ↓</div>
+      <div class="layer">
+        <div class="node api"><div class="t">API layer</div><div class="d">Auth (JWT) · RBAC · Users lifecycle · Audit · Upload + ingest · Aggregation · Realtime broadcast</div></div>
+      </div>
+      <div class="flowdown">↓</div>
+      <div class="layer">
+        <div class="node db"><div class="t">Postgres (OLTP)</div><div class="d">users · audit_log · datasets · dims · fact_sales (partitioned) · materialized aggregates</div></div>
+        <div class="node"><div class="t">Object storage</div><div class="d">S3 / Supabase — raw uploaded files</div></div>
+      </div>
+      <div class="flowdown">↓ &nbsp;<span class="pill">Phase 3 · ELT / CDC</span></div>
+      <div class="layer">
+        <div class="node"><div class="t">Columnar warehouse</div><div class="d">ClickHouse / BigQuery / Snowflake — for &gt;100M rows &amp; multi-country roll-ups</div></div>
+        <div class="node"><div class="t">Connectors</div><div class="d">POS · ERP · Data Warehouse (replaces manual CSV)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASES -->
+  <section>
+    <div class="sec-title">Rollout — ship value early</div>
+    <div class="card">
+      <div class="phase p0"><div class="num">0</div><div class="body">
+        <h4>Demo</h4><span class="when">≈ 1 day</span>
+        <p>Deploy the prototype to a static host so stakeholders can click a link. Still isolated per browser — demo only.</p>
+      </div></div>
+      <div class="phase p1"><div class="num">1</div><div class="body">
+        <h4>Governance for real</h4><span class="when">≈ 1–2 weeks</span>
+        <p>Postgres + Auth/Users/Audit API. Move users, sessions &amp; audit server-side; enforce RBAC on the server; wire the front-end auth, Access Control &amp; Audit Log to the API.</p>
+        <span class="solves">✓ Solves HIGH #1 — Governance</span>
+      </div></div>
+      <div class="phase p2"><div class="num">2</div><div class="body">
+        <h4>Shared data + scale</h4><span class="when">≈ 2–4 weeks</span>
+        <p>Server-side ingestion + aggregation endpoints; panels fetch from the API; empty-state driven by data status; realtime push so every signed-in user auto-refreshes on rebuild.</p>
+        <span class="solves">✓ Solves HIGH #2 — Browser ceiling</span>
+      </div></div>
+      <div class="phase p3"><div class="num">3</div><div class="body">
+        <h4>Live pipeline &amp; model governance</h4><span class="when">ongoing</span>
+        <p>Replace manual upload with POS/ERP/DW connectors &amp; scheduled syncs; version and A/B model parameters (the MED-priority items).</p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section>
+    <div class="sec-title">Recommended stack — two pragmatic paths</div>
+    <div class="grid2">
+      <div class="card ok">
+        <span class="tag fix">Fastest</span>
+        <h3>Supabase (managed)</h3>
+        <ul class="clean" style="margin-top:14px">
+          <li><b>Auth</b> — email/password + JWT, MFA-ready</li>
+          <li><b>Postgres</b> — use the provided schema as-is</li>
+          <li><b>Storage</b> — uploaded files</li>
+          <li><b>Realtime</b> — free <span class="pill">data_updated</span> push</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="tag fix" style="background:rgba(88,166,255,0.12);color:var(--accent)">Full control</span>
+        <h3>Node + Postgres (self-hosted)</h3>
+        <ul class="clean" style="margin-top:14px">
+          <li><b>Express API</b> — the runnable <span class="pill">backend-starter/</span></li>
+          <li><b>JWT + bcrypt/argon2</b> auth</li>
+          <li><b>S3 / MinIO</b> object storage</li>
+          <li><b>SSE / ws</b> realtime · on-prem friendly</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PACKAGE CONTENTS -->
+  <section>
+    <div class="sec-title">In this handoff package</div>
+    <div class="files">
+      <div class="file"><div class="ic">▤</div><div><div class="fn">README.md</div><div class="fd">Scope · migration phases</div></div></div>
+      <div class="file"><div class="ic">▤</div><div><div class="fn">ARCHITECTURE.md</div><div class="fd">Stack · RBAC · security · tokens</div></div></div>
+      <div class="file"><div class="ic">⛁</div><div><div class="fn">DATABASE_SCHEMA.sql</div><div class="fd">Postgres tables + views</div></div></div>
+      <div class="file"><div class="ic">⇄</div><div><div class="fn">API_SPEC.md</div><div class="fd">Every endpoint + realtime</div></div></div>
+      <div class="file"><div class="ic">↔</div><div><div class="fn">FRONTEND_INTEGRATION.md</div><div class="fd">Prototype → API map</div></div></div>
+      <div class="file"><div class="ic">⚙</div><div><div class="fn">backend-starter/</div><div class="fd">Runnable Node + Express + PG</div></div></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>Alfa Analytics · Commercial Intelligence Platform</span>
+    <span>Engineering handoff · v1</span>
+  </div>
+
+</div>
+</body>
+</html>
